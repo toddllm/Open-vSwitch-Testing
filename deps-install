@@ -1,0 +1,15 @@
+OVS_ROOT /usr/local/src/ovs-src/
+ovs needs to be installed
+
+
+#these need a way to detect or be passed a <bridge name>
+#Maybe could create one for each bridge name on the fly
+/usr/local/etc/bridge-ifup
+/usr/local/etc/bridge-ifdown
+/usr/local/etc/ovs-ifup
+/usr/local/etc/ovs-ifdown
+
+/usr/local/etc/ovs-testing/guests/<guest_name>/mac_addr
+/usr/local/etc/ovs-testing/guests/<guest_name>/copy_into_filesystem/
+
+place to store base_images?
