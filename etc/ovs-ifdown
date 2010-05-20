@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# NOTE: This script is intended to run in conjunction with externalbr-ifup
+#       which uses the same logic to find your bridge/switch
+
+switch=br0
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${switch} $1
+

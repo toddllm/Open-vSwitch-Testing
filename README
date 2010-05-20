@@ -31,8 +31,13 @@ Usage
 -----
 
 At minimum you'll need a base guest image in qcow2 format and a 
-file named mac_addr in /etc/ovs-testing/<guest name>/ that 
-contains a valid MAC address (e.g 00:11:22:BB:AA:DD)
+file named mac_addr in /usr/local/etc/ovs-testing/<guest name>/ 
+that contains a valid MAC address (e.g 00:11:22:BB:AA:DD)
+
+Two examples are created called guest1 and guest2, but a base
+qcow2 is still needed. When started, the guests will get a 
+temporary disk image based on that base image.
+
 
 Beyond that, to run benchmarks you need to have them available.
 
@@ -41,7 +46,18 @@ To generate graphs, you'll need gnuplot.
 Example usage:
 
 ovst-setup-network ovs eth0 br0 10.0.0.100
-ovst-start_guest ovs /path/to/base/image.qcow2 guest1
-ovst-start_guest ovs /path/to/base/image.qcow2 guest2
+ovst-start-guest ovs /path/to/base/image.qcow2 guest1
+ovst-start-guest ovs /path/to/base/image.qcow2 guest2
 ovst-run-net-test netpipe guest1 guest2 guest1-guest2-netpipe.out
 ovst-generate-graph guest1-guest2-netpipe.out
+
+Other Notes
+-----------
+
+During install, a symlink to the openvswitch source tree is made
+Other scripts, such as ovst-setup-network set that OVS_ROOT as 
+/usr/local/src/ovs-src (the symlink). That can be overridden at
+runtime by setting OVS_ROOT on the command line.
+
+Example: export OVS_ROOT=/root/src/open-vswitch-1.x.x; ovst-setup-network ovs eth0 br0 10.0.0.100
+

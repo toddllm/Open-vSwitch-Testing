@@ -26,10 +26,10 @@ else
   exit 1
 fi
 
-if [ ! -e ${GUEST_DIR}/${guest_name}/mac_addr ]; then
-  MAC_ADDR=`head -n ${GUEST_DIR}/${guest_name}/mac_addr` 
+if [ -e ${GUEST_DIR}/${guest_name}/mac_addr ]; then
+  MAC_ADDR=`head -n 1 ${GUEST_DIR}/${guest_name}/mac_addr` 
 else
-  echo 'error: missing required configuration at $GUEST_DIR/${guest_name}/mac_addr'
+  echo "error: missing required configuration at $GUEST_DIR/${guest_name}/mac_addr"
   echo $usage
   exit 1
 fi
@@ -43,14 +43,24 @@ guest_disk="${base_image}-${guest_name}.qcow2"
 qemu-img create -f qcow2 -o backing_fmt=qcow2,backing_file=${base_image} ${guest_disk}
 
 qemu-nbd ${guest_disk} &
-sleep 2
 qemu_nbd_pid=`echo $!`
+
+#wait for server to start
+sleep 3
+
 nbd-client localhost 1024 /dev/nbd0
+#wait for client to connect
+sleep 3
+
 mkdir -p /mnt/${guest_name}
-sleep 2
+
 mount /dev/nbd0p1 /mnt/${guest_name}
-cp -a ${GUEST_DIR}/copy_into_filesystem /mnt/$GUEST/
-umount /mnt/${guest_name} kill ${qemu_nbd_pid} 
+cp -a ${GUEST_DIR}/${guest_name}/copy_into_filesystem/* /mnt/$guest_name/
+
+umount /mnt/${guest_name} 
+kill ${qemu_nbd_pid} 
+echo ''
+echo ''
 
 #TODO add virt_system cases here
 #TODO add options to modify this command (memory, drivers, etc.)

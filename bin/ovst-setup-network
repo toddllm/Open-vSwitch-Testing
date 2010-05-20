@@ -30,8 +30,10 @@ IP_address=$4
 ovs_bridge=${bridge_name}
 #TODO same with name of bridged-network bridge name
 
-if [ "x" == "${OVS_ROOT}x" ]; then
+if [ -z ${OVS_ROOT} ]; then
   OVS_ROOT='/usr/local/src/ovs-src/'
+else 
+  echo "using OVS_ROOT of ${OVS_ROOT}"
 fi
 
 if [ ${network_type} == "bridge" ]; then
