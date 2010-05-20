@@ -1,0 +1,47 @@
+This package contains a simple set of scripts to aid in testing
+Open vSwitch. In particular, to compare to standard Linux 
+bridging.
+
+Requirements
+------------
+
+1. A working Open vSwitch Installation. 
+
+2. Currently there is only support for KVM, but other platforms,
+such as Xen should be able to be supported. Patches welcome :)
+
+Instructions for working with KVM and Open vSwitch have been 
+committed. 
+See: INSTALL.KVM (in a release > 1.0.0) or
+http://openvswitch.org/cgi-bin/gitweb.cgi?p=openvswitch;a=blob_plain;f=INSTALL.KVM;hb=6cdd6a87ac43b4d7cc4cfe99f2ae4435afd38951
+
+3. Primary testing has been done on Ubuntu 10.04. 
+
+Dependencies include:
+
+ - nbd-client
+
+Install
+-------
+
+./install.sh
+
+
+Usage
+-----
+
+At minimum you'll need a base guest image in qcow2 format and a 
+file named mac_addr in /etc/ovs-testing/<guest name>/ that 
+contains a valid MAC address (e.g 00:11:22:BB:AA:DD)
+
+Beyond that, to run benchmarks you need to have them available.
+
+To generate graphs, you'll need gnuplot.
+
+Example usage:
+
+ovst-setup-network ovs eth0 br0 10.0.0.100
+ovst-start_guest ovs /path/to/base/image.qcow2 guest1
+ovst-start_guest ovs /path/to/base/image.qcow2 guest2
+ovst-run-net-test netpipe guest1 guest2 guest1-guest2-netpipe.out
+ovst-generate-graph guest1-guest2-netpipe.out
