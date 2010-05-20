@@ -24,7 +24,7 @@ Dependencies include:
 Install
 -------
 
-./install.sh
+./install.sh /path/to/pre-compiled/openvswitch/source/directory
 
 
 Usage
