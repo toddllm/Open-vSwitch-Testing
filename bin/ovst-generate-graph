@@ -1,0 +1,36 @@
+#!/bin/bash
+
+usage="usage: $0 <netpipe|iperf> <net_test_output_file>"
+
+#TODO It would be nice to have:
+# a way to graph multiple files
+# line styles etc.
+# For example: plot "output1" with linespoint, "output" with linespoint
+# Maybe it would be easier to allow custom gnuplot scripts?
+
+if [ -z $2 ]; then
+  echo $usage
+  exit 1
+fi
+
+if [ $1 == "netpipe" ]; then
+  cat > /tmp/${1}-gnuplot-${2} <<EOT
+  set logscale x
+  plot "$2"
+  pause -1 "Hit return to continue"
+EOT
+  gnuplot /tmp/${1}-gnuplot-${2}
+elif [ $1 == "iperf" ]; then
+  echo 'iperf plots not yet supported'
+  #TODO to support iperf or other types, would need good data points
+  #See, Generate_Graph script in the iozone source code.
+  exit 0
+else
+  echo "error: $1 unknown benchmark type"
+  echo $usage
+  exit 1
+fi
+
+#TODO could have option to save gnuplot script
+#cleanup
+rm -f /tmp/${1}-gnuplot-${2}

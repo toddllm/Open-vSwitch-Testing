@@ -86,4 +86,3 @@ Included in the default install are /etc/network/interface files that
 hard code the guest1 and guest2 ip addresses to 10.0.0.201 and .202
 respectively
 
-
