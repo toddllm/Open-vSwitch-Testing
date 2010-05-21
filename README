@@ -30,16 +30,26 @@ Install
 Usage
 -----
 
-At minimum you'll need a base guest image in qcow2 format and a 
-file named mac_addr in /usr/local/etc/ovs-testing/<guest name>/ 
-that contains a valid MAC address (e.g 00:11:22:BB:AA:DD)
+At minimum you'll need:
 
-Two examples are created called guest1 and guest2, but a base
-qcow2 is still needed. When started, the guests will get a 
-temporary disk image based on that base image.
+1) A base guest disk image in qcow2 format, which you can create
+with qemu-img -f qcow2 and then install into it or you can use a 
+tool such as ubuntu-vm-builder, Stacklet, or other guest image 
+creation tool to make a base image. You can also convert a raw 
+disk image to qcow2 with qemu-img convert.
 
+2)A file named mac_addr that is stored in:
+/usr/local/etc/ovs-testing/guests/<guest name>/ that contains a
+valid MAC address (e.g 00:11:22:BB:AA:DD)
 
-Beyond that, to run benchmarks you need to have them available.
+Two simple examples are included (guest1 and guest2), but a base
+qcow2 is still needed. Since when the guests are started, they 
+will get a temporary copy on write disk image based on that base 
+image.
+
+Beyond that, to run benchmarks (such as iperf, netperf, and 
+netpipe-tcp) you'll need to have them available and be able
+to install them on the appropriate systems and guests.
 
 To generate graphs, you'll need gnuplot.
 

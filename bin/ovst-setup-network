@@ -38,6 +38,7 @@ fi
 
 if [ ${network_type} == "bridge" ]; then
   #stop ovs and start linux bridging
+  #TODO: actually detect if teardown is needed
   ovs-vsctl del-port ${network_device}
   ifconfig ${ovs_bridge} down
   ovs-vsctl -- --if-exists del-br ${ovs_bridge}
@@ -52,6 +53,7 @@ if [ ${network_type} == "bridge" ]; then
 
 elif [ ${network_type} == "ovs" ]; then
   #stop linux bridging and start ovs
+  #TODO: actually detect if teardown is needed
   brctl delif ${bridge_name} ${network_device}
   ifconfig ${bridge_name} down
   brctl delbr ${bridge_name}
