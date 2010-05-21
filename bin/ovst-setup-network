@@ -73,3 +73,8 @@ elif [ ${network_type} == "ovs" ]; then
   ovs-vsctl add-port ${ovs_bridge} ${network_device}
   ifconfig ${network_device} 0.0.0.0 up
 fi
+else
+  echo "error: ${network_type} unknown network type"
+  echo $usage
+  exit 1
+fi

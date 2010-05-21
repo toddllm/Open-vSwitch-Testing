@@ -7,6 +7,12 @@ if [ -z $1 ]; then
   exit 1
 fi
 
+user=`whoami`
+if [ $user != "root" ]; then
+  echo 'must be root'
+  exit 1
+fi
+
 cd `dirname $0`
 cp ./bin/* /usr/local/bin/
 mkdir -p /usr/local/etc/ovs-testing/guests/guest1
@@ -26,6 +32,8 @@ address 10.0.0.201
 netmask 255.255.255.0 
 EOT
 
+echo '10.0.0.201' > /usr/local/etc/ovs-testing/guests/guest1/ip
+
 cat > /usr/local/etc/ovs-testing/guests/guest2/copy_into_filesystem/etc/network/interfaces <<EOT
 auto lo
 iface lo inet loopback
@@ -35,6 +43,8 @@ iface eth0 inet static
 address 10.0.0.202
 netmask 255.255.255.0 
 EOT
+
+echo '10.0.0.202' > /usr/local/etc/ovs-testing/guests/guest2/ip
 
 mkdir -p /usr/local/etc/
 cp ./etc/* /usr/local/etc/

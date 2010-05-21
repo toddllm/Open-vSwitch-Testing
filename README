@@ -36,7 +36,11 @@ At minimum you'll need:
 with qemu-img -f qcow2 and then install into it or you can use a 
 tool such as ubuntu-vm-builder, Stacklet, or other guest image 
 creation tool to make a base image. You can also convert a raw 
-disk image to qcow2 with qemu-img convert.
+disk image to qcow2 with qemu-img convert. Be sure to install
+an SSH server that starts at boot in the images.
+
+See also the section below "Other Notes" that describes the
+files included in the default install.
 
 2)A file named mac_addr that is stored in:
 /usr/local/etc/ovs-testing/guests/<guest name>/ that contains a
@@ -51,6 +55,10 @@ Beyond that, to run benchmarks (such as iperf, netperf, and
 netpipe-tcp) you'll need to have them available and be able
 to install them on the appropriate systems and guests.
 
+It is easiest to setup ssh keys for the user that will run
+the tests, but if you choose not to you will be prompted for
+ssh passwords
+
 To generate graphs, you'll need gnuplot.
 
 Example usage:
@@ -58,7 +66,7 @@ Example usage:
 ovst-setup-network ovs eth0 br0 10.0.0.100
 ovst-start-guest ovs /path/to/base/image.qcow2 guest1
 ovst-start-guest ovs /path/to/base/image.qcow2 guest2
-ovst-run-net-test netpipe guest1 guest2 guest1-guest2-netpipe.out
+ovst-run-net-test netpipe guest1_ip guest2_ip guest1-guest2-netpipe.out
 ovst-generate-graph guest1-guest2-netpipe.out
 
 Other Notes
@@ -70,4 +78,12 @@ Other scripts, such as ovst-setup-network set that OVS_ROOT as
 runtime by setting OVS_ROOT on the command line.
 
 Example: export OVS_ROOT=/root/src/open-vswitch-1.x.x; ovst-setup-network ovs eth0 br0 10.0.0.100
+
+To copy any custom files into the guest, you can add them here:
+/usr/local/etc/ovs-testing/guests/<guest_name>/copy_into_filesystem/
+
+Included in the default install are /etc/network/interface files that
+hard code the guest1 and guest2 ip addresses to 10.0.0.201 and .202
+respectively
+
 

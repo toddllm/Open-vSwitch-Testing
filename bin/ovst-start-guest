@@ -2,6 +2,12 @@
 
 usage="usage: $0 bridge|ovs <base_image> <guest_name> [virt_system (default KVM - only virt system supported so far)]"
 
+user=`whoami`
+if [ $user != "root" ]; then
+  echo 'must be root'
+  exit 1
+fi
+
 if [ -z $3 ]; then
   echo $usage
   exit 1
@@ -30,7 +36,7 @@ elif [ ${network_type} == "ovs" ]; then
   DOWN_SCRIPT='/usr/local/etc/ovs-ifdown'
 
 else
-  echo 'error: ${network_type} unknown network type'
+  echo "error: ${network_type} unknown network type"
   echo $usage
   exit 1
 fi

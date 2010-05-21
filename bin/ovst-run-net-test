@@ -1,0 +1,87 @@
+#!/bin/bash
+
+usage="usage: $0 <netpipe|iperf> <client_IP|guest_name> <server_IP|guest_name> <output_file> [benchmark_configuration_file]"
+
+if [ -z $4 ]; then
+  echo $usage
+  exit 1
+fi
+
+benchmark=$1
+client=$2
+server=$3
+output_file=$4
+
+GUEST_DIR=/usr/local/etc/ovs-testing/guests
+
+if [ !  -z $5 ]; then
+  benchmark_configuration_file=$5
+fi
+
+function validate_ip() {
+  if [ $1 == "-1" ]; then
+    echo "Error: Failed to detect ip for $2, you should add a file called:"
+    echo "$GUEST_DIR/$2/ip or pass the IP address directly"
+    exit 1
+  fi
+}
+
+function do_netpipe() {
+  client_IP=$(get_ip_address $1)
+  validate_ip $client_IP $1
+  server_IP=$(get_ip_address $2)
+  validate_ip $server_IP $2
+  gnome-terminal --command="ssh ${server_IP} NPtcp" &
+  echo 'server opened in a new gnome-terminal, tend to it first :)'
+  echo 'waiting for server to start'
+  #TODO: actually detect that server is up
+  sleep 5
+  ssh ${client_IP} NPtcp -h ${server_IP}
+  echo "copying output file with scp to $3 ..."
+  scp ${client_IP}:np.out $3
+}
+
+function do_iperf() {
+  client_IP=$(get_ip_address $1)
+  validate_ip $client_IP $1
+  server_IP=$(get_ip_address $2)
+  validate_ip $server_IP $2
+  gnome-terminal --command="ssh ${server_IP} iperf -s -y C > iperf.out" &
+  echo 'server opened in a new gnome-terminal, tend to it first :)'
+  echo 'NOTE: iperf server has no output'
+  echo 'waiting for server to start'
+  #TODO: actually detect that server is up
+  sleep 5
+  ssh ${client_IP} iperf -c ${server_IP}
+  echo "copying output file with scp to $3 ..."
+  scp ${server_IP}:iperf.out $3
+  #TODO: try to handle more gracefully
+  echo "You should CTRL+c the server terminal"
+
+}
+
+function get_ip_address() {
+  looks_like_ip=$(echo $1 | grep "[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*")
+  if [ "${looks_like_ip}" ]; then
+    echo $1
+  elif [ -e ${GUEST_DIR}/$1/ip ]; then
+    ip=$(head -n 1 ${GUEST_DIR}/$1/ip)
+    echo $ip
+  else
+    echo "-1"
+  fi
+}
+
+
+
+if [ ${benchmark} == "netpipe" ]; then
+  do_netpipe $client $server $output_file
+elif [ ${benchmark} == "iperf" ]; then
+  do_iperf $client $server $output_file
+else 
+  echo "error: ${benchmark} unknown benchmark"
+  echo $usage
+  exit 1
+fi
+
+
