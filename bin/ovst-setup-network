@@ -50,7 +50,6 @@ if [ ${network_type} == "bridge" ]; then
   ifconfig ${bridge_name} $IP_address
   brctl addif ${bridge_name} ${network_device}
   ifconfig ${network_device} 0.0.0.0 up
-
 elif [ ${network_type} == "ovs" ]; then
   #stop linux bridging and start ovs
   #TODO: actually detect if teardown is needed
@@ -72,7 +71,6 @@ elif [ ${network_type} == "ovs" ]; then
   ifconfig ${ovs_bridge} ${IP_address}
   ovs-vsctl add-port ${ovs_bridge} ${network_device}
   ifconfig ${network_device} 0.0.0.0 up
-fi
 else
   echo "error: ${network_type} unknown network type"
   echo $usage
