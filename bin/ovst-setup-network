@@ -38,13 +38,15 @@ fi
 
 if [ ${network_type} == "bridge" ]; then
   #stop ovs and start linux bridging
-  #TODO: actually detect if teardown is needed
-  ovs-vsctl del-port ${network_device}
-  ifconfig ${ovs_bridge} down
-  ovs-vsctl -- --if-exists del-br ${ovs_bridge}
-  ovs-appctl -t ovsdb-server exit
-  ovs-appctl -t ovs-vswitchd exit
-  rmmod openvswitch_mod
+  grep openvswitch_mod /proc/modules
+  if [ $? -eq 0 ]; then #bridge module is loaded, so cleanup
+    ovs-vsctl del-port ${network_device}
+    ifconfig ${ovs_bridge} down
+    ovs-vsctl -- --if-exists del-br ${ovs_bridge}
+    ovs-appctl -t ovsdb-server exit
+    ovs-appctl -t ovs-vswitchd exit
+    rmmod openvswitch_mod
+  fi
   modprobe bridge
   brctl addbr ${bridge_name}
   ifconfig ${bridge_name} $IP_address
@@ -52,11 +54,13 @@ if [ ${network_type} == "bridge" ]; then
   ifconfig ${network_device} 0.0.0.0 up
 elif [ ${network_type} == "ovs" ]; then
   #stop linux bridging and start ovs
-  #TODO: actually detect if teardown is needed
-  brctl delif ${bridge_name} ${network_device}
-  ifconfig ${bridge_name} down
-  brctl delbr ${bridge_name}
-  rmmod bridge
+  grep bridge /proc/modules
+  if [ $? -eq 0 ]; then #bridge module is loaded, so cleanup
+    brctl delif ${bridge_name} ${network_device}
+    ifconfig ${bridge_name} down
+    brctl delbr ${bridge_name}
+    rmmod bridge
+  fi
   insmod ${OVS_ROOT}/datapath/linux-2.6/openvswitch_mod.ko
   ovsdb-tool create /usr/local/etc/ovs-vswitchd.conf.db ${OVS_ROOT}/vswitchd/vswitch.ovsschema
   ovs-appctl -t ovsdb-server exit
