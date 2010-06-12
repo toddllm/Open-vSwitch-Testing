@@ -82,7 +82,7 @@ echo ''
 #TODO add virt_system cases here
 #TODO add options to modify this command (memory, drivers, etc.)
 
-kvm_command="kvm -m 1024 -net nic,macaddr=${MAC_ADDR},model=virtio -net tap,script=${UP_SCRIPT},downscript=${DOWN_SCRIPT} -drive file=${guest_disk},if=virtio,boot=on"
+kvm_command="qemu-kvm -m 1024 -net nic,macaddr=${MAC_ADDR},model=virtio -net tap,script=${UP_SCRIPT},downscript=${DOWN_SCRIPT} -drive file=${guest_disk},if=virtio,boot=on"
 
 #TODO add option to suppress with quiet option
 echo "running: ${kvm_command}"
