@@ -15,6 +15,9 @@ fi
 
 cd `dirname $0`
 cp ./bin/* /usr/local/bin/
+for script in `ls ./bin`; do
+  ln -s /usr/local/bin/${script} /usr/bin/${script}
+done
 mkdir -p /usr/local/etc/ovs-testing/guests/guest1
 mkdir -p /usr/local/etc/ovs-testing/guests/guest2
 echo '00:11:22:AA:BB:DD' > /usr/local/etc/ovs-testing/guests/guest1/mac_addr
