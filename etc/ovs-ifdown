@@ -3,7 +3,20 @@
 # NOTE: This script is intended to run in conjunction with externalbr-ifup
 #       which uses the same logic to find your bridge/switch
 
+if [ -z ${OVS_BIN} ]; then
+  OVS_BIN='/usr/local/bin'
+else 
+  echo "using OVS_ROOT of ${OVS_BIN}"
+fi
+
+if [ -z ${OVS_SBIN} ]; then
+  OVS_SBIN='/usr/local/sbin'
+else 
+  echo "using OVS_ROOT of ${OVS_SBIN}"
+fi
+
+
 switch=br0
 /sbin/ifconfig $1 0.0.0.0 down
-ovs-vsctl del-port ${switch} $1
+${OVS_BIN}/ovs-vsctl del-port ${switch} $1
 
