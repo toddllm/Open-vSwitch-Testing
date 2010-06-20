@@ -64,11 +64,11 @@ if [ ${network_type} == "bridge" ]; then
   #stop ovs and start linux bridging
   grep openvswitch_mod /proc/modules
   if [ $? -eq 0 ]; then #bridge module is loaded, so cleanup
-    ${OVS_BIN}ovs-vsctl del-port ${network_device}
+    ${OVS_BIN}/ovs-vsctl del-port ${network_device}
     ifconfig ${ovs_bridge} down
-    ${OVS_BIN}ovs-vsctl -- --if-exists del-br ${ovs_bridge}
-    ${OVS_BIN}ovs-appctl -t ovsdb-server exit
-    ${OVS_BIN}ovs-appctl -t ovs-vswitchd exit
+    ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
+    ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
+    ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
     rmmod openvswitch_mod
   fi
   modprobe bridge
