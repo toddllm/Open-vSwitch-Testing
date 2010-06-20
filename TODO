@@ -1,0 +1,6 @@
+TODO
+
+---------------------------------
+Easy error checking fixes needed
+---------------------------------
+* During install, check that full path is given and/or that symlink is valid
