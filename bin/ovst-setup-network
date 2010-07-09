@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="usage: $0 <bridge|ovs> <net_dev (e.g eth0)> <bridge_name> <IP_address> [default_gateway] [no_network_teardown]"
+usage="usage: $0 <bridge|ovs> <net_dev (e.g eth0)> <bridge_name> <IP_address> [default_gateway] [no_network_teardown] [no_ovs_teardown]"
 
 user=`whoami`
 if [ $user != "root" ]; then
@@ -85,15 +85,17 @@ elif [ ${network_type} == "ovs" ]; then
     brctl delbr ${bridge_name}
     rmmod bridge
   fi
-  insmod ${OVS_ROOT}/datapath/linux-2.6/openvswitch_mod.ko
-  ${OVS_BIN}/ovsdb-tool create /usr/local/etc/ovs-vswitchd.conf.db ${OVS_ROOT}/vswitchd/vswitch.ovsschema
-  ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
-  ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
-  gnome-terminal --command="${OVS_SBIN}/ovsdb-server /usr/local/etc/ovs-vswitchd.conf.db --remote=punix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
-  ${OVS_BIN}/ovs-vsctl init
-  gnome-terminal --command="${OVS_SBIN}/ovs-vswitchd unix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
-  sleep 1
-  ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
+  if [ -z $7 ]; then #don't teardown ovs
+    insmod ${OVS_ROOT}/datapath/linux-2.6/openvswitch_mod.ko
+    ${OVS_BIN}/ovsdb-tool create /usr/local/etc/ovs-vswitchd.conf.db ${OVS_ROOT}/vswitchd/vswitch.ovsschema
+    ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
+    ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
+    gnome-terminal --command="${OVS_SBIN}/ovsdb-server /usr/local/etc/ovs-vswitchd.conf.db --remote=punix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
+    ${OVS_BIN}/ovs-vsctl init
+    gnome-terminal --command="${OVS_SBIN}/ovs-vswitchd unix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
+    sleep 1
+    ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
+  fi
   ${OVS_BIN}/ovs-vsctl add-br ${ovs_bridge}
   sleep 1
   ifconfig ${ovs_bridge} ${IP_address}
