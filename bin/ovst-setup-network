@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage="usage: $0 <bridge|ovs> <net_dev (e.g eth0)> <bridge_name> <IP_address> [default_gateway] [no_network_teardown] [no_ovs_teardown]"
+usage="usage: $0 <bridge|ovs> <net_dev (e.g eth0)> <bridge_name> <IP_address> <network_teardown 0|1> <ovs_teardown 0|1> [default_gateway]"
 
 user=`whoami`
 if [ $user != "root" ]; then
@@ -8,23 +8,25 @@ if [ $user != "root" ]; then
   exit 1
 fi
 
-if [ -z $4 ]; then
+if [ -z $6 ]; then
   echo $usage
   exit 1
 fi 
 
-if [ -z $6 ]; then
+network_type=$1
+network_device=$2
+bridge_name=$3
+IP_address=$4
+network_teardown=$5
+ovs_teardown=$6
+
+if [ ${network_teardown} -eq 1 ]; then
   #bring down network
   killall -9 dhclient
   for ethN in `ifconfig -a | grep eth | awk '{print $1}'`; do
     ifconfig ${ethN} 0.0.0.0 down
   done
 fi
-
-network_type=$1
-network_device=$2
-bridge_name=$3
-IP_address=$4
 
 #TODO detect (automatically or in data file) or allow ovs_bridge on command line
 ovs_bridge=${bridge_name}
@@ -63,7 +65,7 @@ fi
 if [ ${network_type} == "bridge" ]; then
   #stop ovs and start linux bridging
   grep openvswitch_mod /proc/modules
-  if [ $? -eq 0 ]; then #bridge module is loaded, so cleanup
+  if [ $? -eq 0 ]; then #ovs module is loaded, so cleanup
     ${OVS_BIN}/ovs-vsctl del-port ${network_device}
     ifconfig ${ovs_bridge} down
     ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
@@ -76,6 +78,9 @@ if [ ${network_type} == "bridge" ]; then
   ifconfig ${bridge_name} $IP_address
   brctl addif ${bridge_name} ${network_device}
   ifconfig ${network_device} 0.0.0.0 up
+
+
+#================================ovs networking================================
 elif [ ${network_type} == "ovs" ]; then
   #stop linux bridging and start ovs
   grep bridge /proc/modules
@@ -85,21 +90,32 @@ elif [ ${network_type} == "ovs" ]; then
     brctl delbr ${bridge_name}
     rmmod bridge
   fi
-  if [ -z $7 ]; then #don't teardown ovs
-    insmod ${OVS_ROOT}/datapath/linux-2.6/openvswitch_mod.ko
-    ${OVS_BIN}/ovsdb-tool create /usr/local/etc/ovs-vswitchd.conf.db ${OVS_ROOT}/vswitchd/vswitch.ovsschema
-    ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
-    ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
-    gnome-terminal --command="${OVS_SBIN}/ovsdb-server /usr/local/etc/ovs-vswitchd.conf.db --remote=punix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
-    ${OVS_BIN}/ovs-vsctl init
-    gnome-terminal --command="${OVS_SBIN}/ovs-vswitchd unix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
-    sleep 1
-    ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
-  fi
-  ${OVS_BIN}/ovs-vsctl add-br ${ovs_bridge}
+  if [ $ovs_teardown -eq 1 ]; then #teardown ovs
+    grep openvswitch_mod /proc/modules  
+    if [ $? -eq 0 ]; then #ovs module is loaded, so cleanup
+        ${OVS_BIN}/ovs-vsctl del-port ${network_device}
+        ifconfig ${ovs_bridge} down
+        ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
+        ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
+        ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
+        rmmod openvswitch_mod
+        #TODO would be better to wait for and/or check for module to properly load
+        sleep 1
+    fi
+  fi #end ovs teardown
+
+  #bring up ovs network 
+  #TODO (could check if module is already loaded) and only load it if it is not already loaded
+  insmod ${OVS_ROOT}/datapath/linux-2.6/openvswitch_mod.ko
+  ${OVS_BIN}/ovsdb-tool create /usr/local/etc/ovs-vswitchd.conf.db ${OVS_ROOT}/vswitchd/vswitch.ovsschema
+  gnome-terminal --command="${OVS_SBIN}/ovsdb-server /usr/local/etc/ovs-vswitchd.conf.db --remote=punix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
+  ${OVS_BIN}/ovs-vsctl init
+  gnome-terminal --command="${OVS_SBIN}/ovs-vswitchd unix:/usr/local/var/run/openvswitch/db.sock --pidfile" &
+  sleep 1
+  ${OVS_BIN}/ovs-vsctl -- --may-exist add-br ${ovs_bridge}
   sleep 1
   ifconfig ${ovs_bridge} ${IP_address}
-  ${OVS_BIN}/ovs-vsctl add-port ${ovs_bridge} ${network_device}
+  ${OVS_BIN}/ovs-vsctl -- --may-exist add-port ${ovs_bridge} ${network_device}
   ifconfig ${network_device} 0.0.0.0 up
 else
   echo "error: ${network_type} unknown network type"
@@ -107,8 +123,8 @@ else
   exit 1
 fi
 
-if [ ! -z $5 ]; then
-  route add default gw $5
+if [ ! -z $7 ]; then
+  route add default gw $7
 fi
 
 
