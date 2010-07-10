@@ -93,14 +93,15 @@ elif [ ${network_type} == "ovs" ]; then
   if [ $ovs_teardown -eq 1 ]; then #teardown ovs
     grep openvswitch_mod /proc/modules  
     if [ $? -eq 0 ]; then #ovs module is loaded, so cleanup
-        ${OVS_BIN}/ovs-vsctl del-port ${network_device}
-        ifconfig ${ovs_bridge} down
-        ${OVS_BIN}/ovs-vsctl -- --if-exists del-br ${ovs_bridge}
-        ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
-        ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
-        rmmod openvswitch_mod
-        #TODO would be better to wait for and/or check for module to properly load
-        sleep 1
+      #clean up all ovs bridges
+      for bridge_dev in $(${OVS_BIN}/ovs-vsctl list-br); do
+        ${OVS_BIN}/ovs-vsctl --no-wait del-br ${bridge_dev}
+      done
+      ${OVS_BIN}/ovs-appctl -t ovsdb-server exit
+      ${OVS_BIN}/ovs-appctl -t ovs-vswitchd exit
+      rmmod openvswitch_mod
+      #TODO would be better to wait for and/or check for module to properly load
+      sleep 1
     fi
   fi #end ovs teardown
 
